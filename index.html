@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tembelea Portal — Tembelea University</title>
+  <script src="pi-sdk.js"></script>
+  <style>
+    :root { --green: #0b5d3b; --green-dark: #073f27; --gold: #d4a017; --gold-light: #f7e9b8; --bg: #f4f7f5; --white: #ffffff; --text: #1c2822; --muted: #5c6b63; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 76px; }
+    header { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: var(--white); padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .brand h1 { font-size: 18px; font-weight: 700; }
+    .brand p { font-size: 11px; color: var(--gold-light); }
+    .pi-btn { background: var(--gold); color: #1a1400; border: none; padding: 10px 16px; border-radius: 20px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    .status-bar { background: #1c2822; color: #f7e9b8; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 600; }
+    .container { max-width: 600px; margin: 0 auto; padding: 14px; }
+    .card { background: var(--white); border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-left: 4px solid var(--green); }
+    .badge { display: inline-block; background: var(--gold-light); color: #6e5000; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-bottom: 6px; }
+    .card h3 { font-size: 16px; margin-bottom: 5px; color: var(--green-dark); }
+    .card p { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Tembelea Portal</h1>
+      <p>Tembelea University Student Hub</p>
+    </div>
+    <button type="button" class="pi-btn" id="loginBtn" onclick="startAuth()">Sign in with π</button>
+  </header>
+  <div class="status-bar" id="statusBar">V9 READY — Tap "Sign in with π"</div>
+
+  <div class="container">
+    <div class="card">
+      <span class="badge">ACADEMIC NOTICE</span>
+      <h3>End of Semester Exam Schedule Released</h3>
+      <p>All undergraduate students at Tembelea University can now verify their exam halls and seat numbers at the Faculty Registry.</p>
+    </div>
+    <div class="card">
+      <span class="badge">CAMPUS EVENT</span>
+      <h3>Pi Network Innovation & Hackathon Meetup</h3>
+      <p>Join fellow student developers this Friday at the Main Auditorium to test campus dApps and earn Pi rewards.</p>
+    </div>
+  </div>
+
+  <script>
+    var bar = document.getElementById("statusBar");
+    function log(msg) { bar.innerText = msg; }
+
+    async function startAuth() {
+      log("1. Checking Pi SDK...");
+      if (!window.Pi) {
+        log("Error: window.Pi missing.");
+        return;
+      }
+      try {
+        log("2. Calling Pi.init...");
+        await window.Pi.init({ version: "2.0" });
+        log("3. Opening Pi Allow popup...");
+        var auth = await window.Pi.authenticate(["username"], function(p) {});
+        log("4. Verifying via server proxy...");
+        var res = await fetch("/pi-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken: auth.accessToken })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(JSON.stringify(data));
+        document.getElementById("loginBtn").innerText = "@" + data.user.username;
+        log("SUCCESS! Verified @" + data.user.username);
+      } catch (err) {
+        log("Failed: " + (err && err.message ? err.message : String(err)));
+      }
+    }
+  </script>
+</body>
+</html>
